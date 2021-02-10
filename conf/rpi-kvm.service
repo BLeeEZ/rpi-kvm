@@ -1,0 +1,12 @@
+[Unit]
+Description=rpi-kvm
+After=multi-user.target
+ 
+[Service]
+Type=forking
+ExecStart=/home/pi/rpi-kvm/rpi-kvm.sh restart
+WorkingDirectory=/home/pi/rpi-kvm
+Restart=on-abort
+ 
+[Install]
+WantedBy=multi-user.target

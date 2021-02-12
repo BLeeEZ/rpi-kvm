@@ -1,4 +1,13 @@
-# Raspberry Pi USB - Bluetooth K(V)M
+# Raspberry Pi K(V)M (USB - Bluetooth)
+
+## Overview
+
+![Overview](/.github/Screenshots/overview.png)
+
+- Use one keyboard/mouse at multiple bluetooth devices (PC/Mac/Mobile Phones)
+- Switch via hotkey (SCROLLLOCK-Key) between the connected bluetooth clients
+- Get an overview of the connected bluetooth clients via the inbuild web service
+- Display active bluetooth clients on the desk via LCD desplay
 
 ## Getting started
 
@@ -34,13 +43,15 @@ sudo ./rpi-kvm.sh attach
 To see detailed bluetooth client information go the RPI-K(V)M web interface: [http://raspberrypi:8080](http://raspberrypi:8080)
 >Note: If the host name has been changed during inital Raspberry Pi setup the webserver is reachable at its new RPI-KVM host name or its IP address
 
+![Web page](/.github/Screenshots/web.png)
+
 #### c) Connect a HD44780 LCD display
 
 Follow [this](/docu/lcd.md) wiring guide to display the bluetooth clients on a LCD display.
 
 ![Animated lcd display bluetooth client switch](/.github/Screenshots/lcd.gif)
 
-## Technologies
+## Technologies / Attributions
 
 ### Linux
 
@@ -58,6 +69,7 @@ Follow [this](/docu/lcd.md) wiring guide to display the bluetooth clients on a L
 
 ### Web
 
-- Bootstrap: https://getbootstrap.com/
-- React Js: https://reactjs.org/
-- Babel.js: In-browser Babel transformer for jsx to js
+- [Bootstrap](https://getbootstrap.com/): Responsive mobile-first web sites
+- [Bootstrap Icons](https://icons.getbootstrap.com/?#icons): Beatiful web icons and used for doc/overview pictures
+- [React Js](https://reactjs.org/): A JavaScript library for building user interfaces
+- [Babel.js](https://babeljs.io/): In-browser Babel transformer for jsx to js: 

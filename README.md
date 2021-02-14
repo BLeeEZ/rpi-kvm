@@ -4,10 +4,10 @@
 
 ![Overview](/.github/Screenshots/overview.png)
 
-- Use one keyboard/mouse at multiple bluetooth devices (PC/Mac/Mobile Phones)
+- Use one keyboard/mouse at multiple bluetooth devices (PC/Laptop/Mac/Mobile Phones)
 - Switch via hotkey (SCROLLLOCK-Key) between the connected bluetooth clients
 - Get an overview of the connected bluetooth clients via the inbuild web service
-- Display active bluetooth clients on the desk via LCD desplay
+- Show active bluetooth clients via a LCD display on your desk
 
 ## Getting started
 

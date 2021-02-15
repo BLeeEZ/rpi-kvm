@@ -3,15 +3,18 @@
 import os
 import asyncio
 import dbus_next
+import socket
 from dbus_next.aio import MessageBus
 from aiohttp import web
 import json
 import logging
 from settings import Settings
+from usb_hid_decoder import UsbHidDecoder
 
 class WebServer(object):
     def __init__(self, settings):
         self._settings = settings
+        self._server_url = ""
         self._is_alive = False
         self._server_future = None
         self._app = web.Application()
@@ -24,6 +27,7 @@ class WebServer(object):
         self._app.add_routes([web.get('/get_settings', self.get_settings)])
         self._app.add_routes([web.post('/set_settings', self.set_settings)])
         self._app.add_routes([web.post('/restart_service', self.restart_service)])
+        self._app.add_routes([web.get('/get_keyboard_codes', self.get_keyboard_codes)])
         self._app.router.add_static('/', "web/")
 
     async def _connect_to_dbus_service(self):
@@ -72,7 +76,15 @@ class WebServer(object):
         except dbus_next.DBusError:
             logging.warning(f"D-Bus connection terminated - reconnecting...")
             await self._connect_to_dbus_service()
-            await self._disconnect_bt_client(client_address)
+            await self._switch_active_bt_host(client_address)
+
+    async def _trigger_reload_settings(self):
+        try:
+            await self._kvm_dbus_iface.call_reload_settings()
+        except dbus_next.DBusError:
+            logging.warning(f"D-Bus connection terminated - reconnecting...")
+            await self._connect_to_dbus_service()
+            await self._trigger_reload_settings()
 
     async def run(self):
         logging.info(f"D-Bus service connecting...")
@@ -81,10 +93,11 @@ class WebServer(object):
         self._is_alive = True
         while self._is_alive:
             self._server_future = asyncio.Future()
-            logging.info("Starting web server")
+            self._server_url = f"http://{socket.gethostname()}:{self._settings['web']['port']}"
+            logging.info(f"Starting web server on: {self._server_url}")
             self._runner = web.AppRunner(self._app)
             await self._runner.setup()
-            self._site = web.TCPSite(self._runner, None, self._settings["web"]["port"])
+            self._site = web.TCPSite(self._runner, None, self._settings['web']['port'])
             await self._site.start()
             await self._server_future
             await self._site.stop()
@@ -120,7 +133,9 @@ class WebServer(object):
     async def set_settings(self, request):
         data = await request.json()
         if "settings" in data:
-            self._settings.apply_settings_from_dict(data["settings"])
+            has_changed = self._settings.apply_settings_from_dict(data["settings"])
+            if has_changed:
+                await self._trigger_reload_settings()
         return web.Response()
 
     async def restart_service(self, request):
@@ -137,6 +152,14 @@ class WebServer(object):
                 logging.warning("Restart Raspbarry Pi")
                 os.system('sudo reboot -f')
         return web.Response()
+
+    async def get_keyboard_codes(self, request):
+        return web.Response(text=json.dumps({
+            "keyboardCodes": {
+                "keyCodes": UsbHidDecoder.KEY_CODES,
+                "modifierKeys": UsbHidDecoder.MODIFIER_KEYS_BIT_MASK_VALUE
+                }
+            }))
 
 async def main():
     logging.basicConfig(format='Web %(levelname)s: %(message)s', level=logging.DEBUG)

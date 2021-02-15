@@ -12,13 +12,15 @@ from dbus_next import Variant
 import signal
 import logging
 import json
+from settings import Settings
 from bt_server import BtServer
 from hotkey import HotkeyDetector, HotkeyConfig, HotkeyAktion
 from usb_hid_decoder import UsbHidDecoder
 
 class KvmDbusService(ServiceInterface):
-    def __init__(self, hotkey_detector, bt_server):
+    def __init__(self, settings, hotkey_detector, bt_server):
         super().__init__("org.rpi.kvmservice")
+        self._settings = settings
         self._hotkey_detector = hotkey_detector
         self._bt_server = bt_server
         self._stop_event = False
@@ -62,6 +64,12 @@ class KvmDbusService(ServiceInterface):
     @dbus_next.service.method()
     def DisconnectClient(self, client_address: 's') -> '':
         self._bt_server.disconnect_client(client_address)
+        return
+
+    @dbus_next.service.method()
+    def ReloadSettings(self) -> '':
+        logging.info(f"D-Bus: Reload settings")
+        self._hotkey_detector.reload_settings()
         return
 
     @dbus_next.service.method()
@@ -144,9 +152,11 @@ async def main():
     bt_server = BtServer()
     bt_server_task = asyncio.create_task( bt_server.run() )
 
-    hotkey_config = HotkeyConfig()
+    settings = Settings()
+    settings.load_from_file()
+    hotkey_config = HotkeyConfig(settings)
     hotkey_detector = HotkeyDetector(hotkey_config)
-    kvm_dbus_service = KvmDbusService(hotkey_detector, bt_server)
+    kvm_dbus_service = KvmDbusService(settings, hotkey_detector, bt_server)
     kvm_dbus_service_task = asyncio.create_task( kvm_dbus_service.run() )
 
     main_future = asyncio.Future()

@@ -11,6 +11,20 @@ class Settings(object):
         self._settings_dict = {
             "web": {
                 "port": 8080
+            },
+            "hotkeys": {
+                            # Bit Mask for control keys
+                            # |- Right GUI
+                            # |  |- Right ALT
+                            # |  |  |- Right Shift
+                            # |  |  |  |- Right Control
+                            # |  |  |  |  |- Left GUI
+                            # |  |  |  |  |  |- Left ALT
+                            # |  |  |  |  |  |  |- Left Shift
+                            # |  |  |  |  |  |  |  |- Left Control
+                            # |  |  |  |  |  |  |  |   |- 6 pressed keys
+                            #[0, 0, 0, 0, 0, 0, 0, 0], 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                "nextHost": [[0, 0, 0, 0, 0, 0, 0, 0], 0x47, 0x00, 0x00, 0x00, 0x00, 0x00] # KEY_SCROLLLOCK 71 -> 0x47
             }
         }
 
@@ -43,6 +57,9 @@ class Settings(object):
             logging.info(change)
         if changed:
             self.save_to_file()
+            return True
+        else:
+            return False
 
     def save_to_file(self):
         file_content = json.dumps(self._settings_dict, indent=4)
@@ -53,10 +70,19 @@ class Settings(object):
     def load_from_file(self):
         if not os.path.exists(Settings.PATH_TO_FILE):
             logging.error(f"Settings file does not exist at: {Settings.PATH_TO_FILE}")
+            logging.info(f"Create new settings file with init values at: {Settings.PATH_TO_FILE}")
+            self.save_to_file()
             return
         with open(Settings.PATH_TO_FILE, 'r') as f:
             content = f.read()
-            self._settings_dict = json.loads(content)
+            saved_settings_dict = json.loads(content)
+            for subject in self._settings_dict.keys():
+                if subject in saved_settings_dict:
+                    for element in self._settings_dict[subject].keys():
+                        if element in saved_settings_dict[subject]:
+                            if saved_settings_dict[subject][element] != self._settings_dict[subject][element]:
+                                self._settings_dict[subject][element] = saved_settings_dict[subject][element]
+
 
 def main():
     logging.basicConfig(format='Settings %(levelname)s: %(message)s', level=logging.DEBUG)

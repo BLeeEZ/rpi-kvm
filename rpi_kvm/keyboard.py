@@ -23,13 +23,7 @@ class Keyboard(object):
             False, # Left Shift
             False] # Left Control
         # Place for 6 simultaneously pressed regular keys
-        self._keys = [
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00]
+        self._keys = [0, 0, 0, 0, 0, 0]
 
     async def run(self):
         logging.info(f"{self._idev.path}: D-Bus service connecting...")

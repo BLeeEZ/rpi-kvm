@@ -11,7 +11,7 @@ class SettingsView extends React.Component {
           port: 8080
         },
         hotkeys: {
-          nextHost: [[0, 0, 0, 0, 0, 0, 0, 0], 0, 0, 0, 0, 0, 0]
+          nextHost: [[false, false, false, false, false, false, false, false], 0, 0, 0, 0, 0, 0]
         },
       },
       keyboardCodes: {

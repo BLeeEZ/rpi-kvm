@@ -13,18 +13,19 @@ class Settings(object):
                 "port": 8080
             },
             "hotkeys": {
-                            # Bit Mask for control keys
+                            # Bit mask for modifier keys
                             # |- Right GUI
-                            # |  |- Right ALT
-                            # |  |  |- Right Shift
-                            # |  |  |  |- Right Control
-                            # |  |  |  |  |- Left GUI
-                            # |  |  |  |  |  |- Left ALT
-                            # |  |  |  |  |  |  |- Left Shift
-                            # |  |  |  |  |  |  |  |- Left Control
-                            # |  |  |  |  |  |  |  |   |- 6 pressed keys
-                            #[0, 0, 0, 0, 0, 0, 0, 0], 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                "nextHost": [[0, 0, 0, 0, 0, 0, 0, 0], 0x47, 0x00, 0x00, 0x00, 0x00, 0x00] # KEY_SCROLLLOCK 71 -> 0x47
+                            # |      |- Right ALT
+                            # |      |      |- Right Shift
+                            # |      |      |      |- Right Control
+                            # |      |      |      |      |- Left GUI
+                            # |      |      |      |      |      |- Left ALT
+                            # |      |      |      |      |      |      |- Left Shift
+                            # |      |      |      |      |      |      |      |- Left Control
+                            #[False, False, False, False, False, False, False, False]
+                "nextHost": [[False, False, False, False, False, False, False, False],
+                            # 6 pressed keys
+                            71, 0, 0, 0, 0, 0] # KEY_SCROLLLOCK 71
             }
         }
 

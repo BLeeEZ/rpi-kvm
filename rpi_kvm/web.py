@@ -8,6 +8,7 @@ from dbus_next.aio import MessageBus
 from aiohttp import web
 import json
 import logging
+import common
 from settings import Settings
 from usb_hid_decoder import UsbHidDecoder
 
@@ -28,6 +29,8 @@ class WebServer(object):
         self._app.add_routes([web.post('/set_settings', self.set_settings)])
         self._app.add_routes([web.post('/restart_service', self.restart_service)])
         self._app.add_routes([web.get('/get_keyboard_codes', self.get_keyboard_codes)])
+        self._app.add_routes([web.get('/is_update_available', self.is_update_available)])
+        self._app.add_routes([web.get('/perform_update', self.perform_update)])
         self._app.router.add_static('/', "web/")
 
     async def _connect_to_dbus_service(self):
@@ -160,6 +163,35 @@ class WebServer(object):
                 "modifierKeys": UsbHidDecoder.MODIFIER_KEYS_BIT_MASK_VALUE
                 }
             }))
+
+    async def _is_git_update_available(self):
+        _, stdout, _ = await common.System.exec_cmd("git rev-list HEAD...origin/main --count")
+        return (stdout != b'0\n')
+
+    async def is_update_available(self, request):
+        is_updateable = await self._is_git_update_available()
+        if not is_updateable:
+            await common.System.exec_cmd("git fetch")
+            is_updateable = await self._is_git_update_available()
+        return web.Response(text=json.dumps({
+            "isUpdateAvailable": is_updateable
+            }))
+
+    async def perform_update(self, request):
+        await common.System.exec_cmd("git fetch")
+        is_updateable = await self._is_git_update_available()
+        is_update_successful = False
+        has_update_performed = False
+        if is_updateable:
+            logging.info(f"Perfrom update via git merge")
+            returncode, _, _ = await common.System.exec_cmd("git merge origin/main")
+            is_update_successful = (returncode == 0)
+            has_update_performed = True
+        return web.Response(text=json.dumps({
+            "isUpdateSuccessful": is_update_successful,
+            "hasUpdatePerformed": has_update_performed
+            }))
+
 
 async def main():
     logging.basicConfig(format='Web %(levelname)s: %(message)s', level=logging.DEBUG)

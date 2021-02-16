@@ -134,7 +134,8 @@ class SettingsView extends React.Component {
     return (
       <section id="settings">
         <WelcomeBanner name="Settings" message="Configure your RPI-K(V)M" />
-        <div className="container">
+        <UpdatePerformer notify={this.props.notify}/>
+        <div className="container mt-5">
           <form onSubmit={this.handleSubmit}>
             {this.renderWebSection()}
             {this.renderHotkeySection(keyboardCodes)}
@@ -145,7 +146,7 @@ class SettingsView extends React.Component {
             </div>
           </form>
         </div>
-        <div className="container mt-5">
+        <div className="container my-5">
           <ServiceRestartSection notify={this.props.notify} />
         </div>
       </section>

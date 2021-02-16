@@ -10,6 +10,16 @@ class InfoBanner extends React.Component {
   }
 }
 
+class SuccessBanner extends React.Component {
+  render() {
+    return (
+      <div className="alert alert-success" role="alert">
+        {this.props.message}
+      </div>
+    );
+  }
+}
+
 class ErrorAlert extends React.Component {
   render() {
     return (

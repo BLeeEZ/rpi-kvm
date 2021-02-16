@@ -1,3 +1,4 @@
+import logging
 
 class UsbHidDecoder(object):
     # Python translation of the USB - HID Usage Tables:
@@ -167,22 +168,22 @@ class UsbHidDecoder(object):
         "KEY_RIGHTSHIFT": 229,
         "KEY_RIGHTALT": 230,
         "KEY_RIGHTMETA": 231,
-        "KEY_MEDIA_PLAYPAUSE": 232,
-        "KEY_MEDIA_STOPCD": 233,
-        "KEY_MEDIA_PREVIOUSSONG": 234,
-        "KEY_MEDIA_NEXTSONG": 235,
-        "KEY_MEDIA_EJECTCD": 236,
-        "KEY_MEDIA_WWW": 240,
-        "KEY_MEDIA_BACK": 241,
-        "KEY_MEDIA_FORWARD": 242,
+        "KEY_PLAYPAUSE": 232,
+        "KEY_STOPCD": 233,
+        "KEY_PREVIOUSSONG": 234,
+        "KEY_NEXTSONG": 235,
+        "KEY_EJECTCD": 236,
+        "KEY_WWW": 240,
+        "KEY_BACK": 241,
+        "KEY_FORWARD": 242,
         "KEY_MEDIA_STOP": 243,
         "KEY_MEDIA_FIND": 244,
-        "KEY_MEDIA_SCROLLUP": 245,
-        "KEY_MEDIA_SCROLLDOWN": 246,
-        "KEY_MEDIA_EDIT": 247,
-        "KEY_MEDIA_SLEEP": 248,
-        "KEY_MEDIA_COFFEE": 249,
-        "KEY_MEDIA_REFRESH": 250,
+        "KEY_SCROLLUP": 245,
+        "KEY_SCROLLDOWN": 246,
+        "KEY_EDIT": 247,
+        "KEY_SLEEP": 248,
+        "KEY_COFFEE": 249,
+        "KEY_REFRESH": 250,
         "KEY_CALC": 251
     }
 
@@ -212,7 +213,10 @@ class UsbHidDecoder(object):
 
     @staticmethod
     def is_modifier_key(evdev_keycode):
-        return (evdev_keycode in UsbHidDecoder.MODIFIER_KEYS_BIT_MASK_INDEX)
+        if type(evdev_keycode) == list:
+            return False
+        else:
+            return (evdev_keycode in UsbHidDecoder.MODIFIER_KEYS_BIT_MASK_INDEX)
 
     @staticmethod
     def convert_modifier_bit_mask_to_int(modifier_bit_mask):
@@ -223,10 +227,18 @@ class UsbHidDecoder(object):
 
     @staticmethod
     def encode_regular_key(evdev_keycode):
-        if evdev_keycode in UsbHidDecoder.KEY_CODES:
-            return UsbHidDecoder.KEY_CODES[evdev_keycode]
-        else:
+        if type(evdev_keycode) == list:
+            for keycode in evdev_keycode:
+                if keycode in UsbHidDecoder.KEY_CODES:
+                    return UsbHidDecoder.KEY_CODES[keycode]
+            logging.error(f"USB-HID: Keycode '{evdev_keycode}' could not be mapped to an usb integer value")
             return 0
+        else:
+            if evdev_keycode in UsbHidDecoder.KEY_CODES:
+                return UsbHidDecoder.KEY_CODES[evdev_keycode]
+            else:
+                logging.error(f"USB-HID: Keycode '{evdev_keycode}' could not be mapped to an usb integer value")
+                return 0
 
     @staticmethod
     def encode_modifier_key_index(evdev_keycode):

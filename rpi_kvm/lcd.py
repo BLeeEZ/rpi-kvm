@@ -71,7 +71,8 @@ class LcdDisplay(object):
 
     async def run(self):
         await self._init()
-        while True:
+        self._is_task_active = True
+        while self._is_task_active:
             (cmd, arg1, arg2) = await self._queue.get()
             if LcdCmd.SendString == cmd:
                 await self._change_active_line(arg2)
@@ -82,6 +83,9 @@ class LcdDisplay(object):
             elif LcdCmd.BacklightSet == cmd:
                 await self._set_backlight(arg1)
             self._queue.task_done()
+
+    def stop(self):
+        self._is_task_active = False
     
     async def _init(self):
         logging.info("Initialization start")

@@ -71,6 +71,12 @@ class KvmDbusService(ServiceInterface):
         logging.info(f"D-Bus: Reload settings")
         self._hotkey_detector.reload_settings()
         return
+    
+    @dbus_next.service.method()
+    def RestartInfoHub(self) -> '':
+        logging.info(f"D-Bus: Restart Info Hub")
+        self.signal_restart_info_hub()
+        return
 
     @dbus_next.service.method()
     def SwitchActiveHost(self, client_address: 's') -> '':
@@ -141,6 +147,10 @@ class KvmDbusService(ServiceInterface):
     @dbus_next.service.signal()
     def signal_clients_change(self, client_names: 'as') -> 'as':
         return client_names
+
+    @dbus_next.service.signal()
+    def signal_restart_info_hub(self) -> '':
+        return
 
 async def main():
     logging.basicConfig(format='BT %(levelname)s: %(message)s', level=logging.DEBUG)

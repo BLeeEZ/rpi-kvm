@@ -181,19 +181,25 @@ class ServiceRestartSection extends React.Component {
       <div className="row g-3 align-items-center">
         <h2 className="fw-light">RPI-K(V)M Service Actions</h2>
 
-        <div className="d-grid col-4">
+        <div className="d-grid col-3">
+          <button className="btn btn-outline-danger" onClick={() => this.sendServiceRestart("info-hub")}>
+            Restart Info Hub
+          </button>
+        </div>
+
+        <div className="d-grid col-3">
           <button className="btn btn-outline-danger" onClick={() => this.sendServiceRestart("web")}>
             Restart Web service
           </button>
         </div>
 
-        <div className="d-grid col-4">
+        <div className="d-grid col-3">
           <button className="btn btn-outline-danger" onClick={() => this.sendServiceRestart("kvm")}>
             Restart KVM service
           </button>
         </div>
 
-        <div className="d-grid col-4">
+        <div className="d-grid col-3">
           <button className="btn btn-outline-danger" onClick={() => this.sendServiceRestart("rpi")}>
             Restart Raspberry Pi
           </button>

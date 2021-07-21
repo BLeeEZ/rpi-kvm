@@ -14,6 +14,7 @@ class InfoHub(object):
         self._next_host = None
         self._np1_host = None
         self._prev_host = None
+        self._is_restart_triggered = False
 
     async def _connect_to_dbus_service(self):
         self._kvm_dbus_iface = None
@@ -35,10 +36,24 @@ class InfoHub(object):
         try:
             self._kvm_dbus_iface.on_signal_host_change(self._handle_clients_change)
             self._kvm_dbus_iface.on_signal_clients_change(self._handle_clients_change)
+            self._kvm_dbus_iface.on_signal_restart_info_hub(self._handle_restart_info_hub)
         except dbus_next.DBusError:
             logging.warning("D-Bus service not available - reconnecting...")
             await self._connect_to_dbus_service()
             await self._register_to_dbus_signals()
+
+    def _handle_restart_info_hub(self):
+        logging.info("Restart received")
+        self._is_restart_triggered = True
+
+    async def _perform_restart(self):
+        self._is_restart_triggered = False
+        self._display.stop()
+        self._display.set_backlight(True)
+        await asyncio.sleep(0.5)
+        self._display.cleanup()
+        hub_task = asyncio.create_task(self.run(is_restart=True))
+        await hub_task
 
     async def _fetch_and_display_clients(self):
         try:
@@ -95,19 +110,22 @@ class InfoHub(object):
         await asyncio.sleep(2)
         self._display.blank()
     
-    async def run(self):
+    async def run(self, is_restart = False):
         logging.info(f"Starting display")
         asyncio.create_task(self._display.run())
         await asyncio.sleep(0.5)
         await self._show_welcome()
 
-        logging.info(f"D-Bus service connecting...")
-        await self._connect_to_dbus_service()
-        await self._register_to_dbus_signals() # ready to handle signals and to display them
+        if not is_restart:
+            logging.info(f"D-Bus service connecting...")
+            await self._connect_to_dbus_service()
+            await self._register_to_dbus_signals() # ready to handle signals and to display them
         await self._fetch_and_display_clients()
 
         logging.info(f"Starting date/time loop")
         while True:
+            if self._is_restart_triggered:
+                await self._perform_restart()
             lt = time.localtime(time.time())
             time_str = f"{lt.tm_mday:02}.{lt.tm_mon:02}.{lt.tm_year}     {lt.tm_hour:02}:{lt.tm_min:02}"
             self._display.send_string(time_str, LcdDisplay.LCD_LINE_2, LcdLineStyle.Centred)

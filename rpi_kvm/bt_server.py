@@ -86,7 +86,7 @@ class BtServer(object):
         managed_objects = await dbus_object_manager_itf.call_get_managed_objects()
 
         for obj_path in list(managed_objects):
-            if  "org.bluez.Device1" in managed_objects[obj_path]:
+            if "org.bluez.Device1" in managed_objects[obj_path]:
                 asyncio.create_task( self._connect_to_client(obj_path) )
 
     async def _connect_to_client(self, device_object_path):
@@ -227,6 +227,31 @@ class BtServer(object):
             client = self._clients[client_address]
             logging.info(f"Server: External trigger: Disconnect {client.name} ({client.address})")
             client.stop()
+    
+    def remove_client(self, client_address):
+        if client_address in self._clients:
+            client = self._clients[client_address]
+            logging.info(f"Server: External trigger: Remove {client.name} ({client.address})")
+            self._clients.pop(client.address)
+            self._notify_on_clients_change()
+            asyncio.create_task( self._remove_client_from_system(client) )
+            
+    async def _remove_client_from_system(self, client):
+        logging.info(f"Server: Stopping client: {client.name} ({client.address})")
+        client.stop()
+        await self._remove_client_from_bluez(client)
+        logging.info(f"\033[0;31mServer: Client {client.name} ({client.address}) removed!\033[0m")
+
+    async def _remove_client_from_bluez(self, client):
+        logging.info(f"Server: Remove client {client.name} ({client.address}) from bluez")
+        dbus = await MessageBus(bus_type=dbus_next.BusType.SYSTEM).connect()
+        introspection = await dbus.introspect(
+            "org.bluez", "/org/bluez/hci0")
+        bluez_obj = dbus.get_proxy_object(
+            "org.bluez", "/org/bluez/hci0", introspection)
+        bluez_adapter_itf = bluez_obj.get_interface("org.bluez.Adapter1")
+        await bluez_adapter_itf.call_remove_device(client.object_path)
+        logging.info(f"Server: Remove client {client.name} ({client.address}) from bluez done")
 
     def send(self, message):
         if self._active_host:

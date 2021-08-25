@@ -99,6 +99,29 @@ class BtClient extends React.Component {
        })
   }
 
+  removeClient() {
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientAddress: this.props.address })
+    };
+
+    fetch(API + "remove_client", requestOptions)
+      .then(
+        (response) => {
+          if(response.ok) {
+            console.log("success")
+            this.props.notify(NotifyType.success, 'Remove client requested successfully')
+          } else {
+            throw Error("")
+          }
+       })
+      .catch((error) => {
+          console.log("error")
+          this.props.notify(NotifyType.error, 'Something went wrong during client removal...')
+       })
+  }
+
   setAsActiveBtHost() {
     const requestOptions = {
       method: 'POST',
@@ -161,7 +184,14 @@ class BtClient extends React.Component {
     return (
       <div className="col-md-6 ">
         <div className="card mb-3 border-secondary">
-          <h5 className="card-header bg-secondary text-center text-white">{this.props.name}</h5>
+          <div className="card-header bg-secondary pb-0">
+            <div className="row">
+              <h5 className="text-center text-white col-11">
+                {this.props.name}
+              </h5>
+              <ClientRemovalModalButton {...this.props} removeCB={() => this.removeClient()}/>
+            </div>
+          </div>
           <div className="card-body">
             <h6 className="card-title">Disconnected</h6>
             <p className="card-text">{this.props.address}</p>

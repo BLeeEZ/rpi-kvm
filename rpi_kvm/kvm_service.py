@@ -67,6 +67,11 @@ class KvmDbusService(ServiceInterface):
         return
 
     @dbus_next.service.method()
+    def RemoveClient(self, client_address: 's') -> '':
+        self._bt_server.remove_client(client_address)
+        return
+
+    @dbus_next.service.method()
     def ReloadSettings(self) -> '':
         logging.info(f"D-Bus: Reload settings")
         self._hotkey_detector.reload_settings()

@@ -33,12 +33,12 @@ class BtClient(object):
         return device_object_path[-17:].replace("_",":")
 
     @staticmethod
-    def get_devie_object_path_from_mac_address(device_object_path):
+    def get_device_object_path_from_mac_address(device_object_path):
         return "/org/bluez/hci0/dev_" + device_object_path.replace(":","_")
 
     def __init__(self, address):
         self._address = address
-        self._device_object_path = BtClient.get_devie_object_path_from_mac_address(self._address)
+        self._device_object_path = BtClient.get_device_object_path_from_mac_address(self._address)
         self._is_alive = True
         self._stop_event = False
         self._is_connected = False
@@ -54,6 +54,10 @@ class BtClient(object):
     @property
     def address(self):
         return self._address
+
+    @property
+    def object_path(self):
+        return self._device_object_path
 
     @property
     def name(self):

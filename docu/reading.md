@@ -8,6 +8,8 @@ The HID profile specification helps to understand the `sdp_record.xml`: [SDP - H
 
 Bluetooth master / slave behaviour is descripted here: [Masters and Slaves: Roles in a Bluetooth Piconet](https://www.informit.com/articles/article.aspx?p=21324)
 
+Bluez DBus API: [git.kernel.org - Bluez](https://git.kernel.org/pub/scm/bluetooth/bluez.git/tree/doc)
+
 ## USB
 
 USB - HID Usage Tables: [usb usage tables](https://www.usb.org/sites/default/files/documents/hut1_12v2.pdf)

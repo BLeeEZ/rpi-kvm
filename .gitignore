@@ -1,3 +1,4 @@
 __pycache__/
 conf/bluetooth.service.bak
 conf/rpi-kvm-settings.json
+conf/rpi-kvm-client-order.json

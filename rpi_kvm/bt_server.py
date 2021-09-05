@@ -9,6 +9,7 @@ import socket
 import logging
 import common
 from bt_client import BtClient
+from client_order import PersistentClientOrder
 
 class BtServer(object):
     NAME = "RPI-KVM"
@@ -26,6 +27,8 @@ class BtServer(object):
         self._clients_connected = {}
         self._active_host = None
         self._handlers_on_clients_change = []
+        self._clients_order = PersistentClientOrder()
+        self._clients_order.load_from_file()
 
     def stop(self):
         self._stop_event = True
@@ -150,8 +153,9 @@ class BtServer(object):
             self._clients[client.address].stop()
         self._clients[client.address] = client
         if not self._active_host:
-            logging.info(f"Server: Active host: {client.name}")
-            self._active_host = client
+            if self._clients_order.active_client == client.address:
+                logging.info(f"Server: Active host: {client.name}")
+                self._active_host = client
         elif self._active_host.address == client.address:
             logging.info(f"Server: Reconnection of active host: {client.name}")
             self._active_host = client
@@ -163,6 +167,8 @@ class BtServer(object):
         for client_address, client in self._clients.items():
             if client.is_alive:
                 self._clients_connected[client_address] = client
+            if client_address not in self._clients_order.clients:
+                self._clients_order.add_client(client)
         if self._clients_connected != old_clients_connected:
             self._notify_on_clients_change()
 
@@ -173,14 +179,16 @@ class BtServer(object):
         elif len(self._clients_connected) == 1:
             next_host = self._get_connected_client_addresses()[0]
             self._active_host = self._clients_connected[next_host]
+        self._clients_order.active_client = self._active_host.address
 
     def switch_active_host_to(self, client_address):
         if client_address in self._clients:
             self._active_host = self._clients[client_address]
+        self._clients_order.active_client = self._active_host.address
 
     def _get_connected_client_addresses(self):
         if self._active_host and len(self._clients_connected) > 0:
-            client_addresses = list(self._clients_connected.keys())
+            client_addresses = self._clients_order.sort_clients( list(self._clients_connected.keys()) )
             if self._active_host.address in client_addresses:
                 cur_active_index = client_addresses.index(self._active_host.address)
             else:
@@ -212,6 +220,7 @@ class BtServer(object):
         infos = []
         for client_address, client in self._clients.items():
             info_dict = client.info
+            info_dict["order"] = self._clients_order.clients[client.address]
             info_dict["isHost"] = (self._active_host.address == client.address)
             infos.append(info_dict)
         return {"clients": infos}
@@ -228,6 +237,16 @@ class BtServer(object):
             logging.info(f"Server: External trigger: Disconnect {client.name} ({client.address})")
             client.stop()
     
+    def change_client_order(self, client_address, order_type):
+        if client_address in self._clients:
+            client = self._clients[client_address]
+            logging.info(f"Server: External trigger: Change order of {client.name} ({client.address}) {order_type}")
+            if order_type == "lower":
+                self._clients_order.change_order_lower(client_address)
+            elif order_type == "higher":
+                self._clients_order.change_order_higher(client_address)
+            self._notify_on_clients_change()
+
     def remove_client(self, client_address):
         if client_address in self._clients:
             client = self._clients[client_address]

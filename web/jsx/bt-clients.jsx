@@ -28,6 +28,7 @@ class BtClients extends React.Component {
       .then(response => response.json())
       .then(
         (result) => {
+          var sorted_clients = result.clients.sort((a, b) => a.order - b.order)
           this.setState({
             clients: result.clients,
             isLoading: false,
@@ -53,8 +54,14 @@ class BtClients extends React.Component {
     } else if (isLoading && isInitalFetch) {
       clientsContent = <LoadingSpinner />;
     } else {
+      var lastClientOrderNumber = 0;
+      for (const [index, client] of clients.entries()) {
+        if (client.order > lastClientOrderNumber) {
+          lastClientOrderNumber = client.order
+        }
+      };
       clientsContent = clients.map(client => (
-        <BtClient key={client.address} {...client} notify={this.props.notify} />
+        <BtClient key={client.address} {...client} lastClientOrderNumber={lastClientOrderNumber} notify={this.props.notify} />
       ));
     }
     return (
@@ -122,6 +129,58 @@ class BtClient extends React.Component {
        })
   }
 
+  changeOrderLower() {
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        clientAddress: this.props.address,
+        order_type: "lower"
+      })
+    };
+
+    fetch(API + "change_client_order", requestOptions)
+      .then(
+        (response) => {
+          if(response.ok) {
+            console.log("success")
+            this.props.notify(NotifyType.success, 'Change active bluetooth host requested successfully')
+          } else {
+            throw Error("")
+          }
+       })
+      .catch((error) => {
+          console.log("error")
+          this.props.notify(NotifyType.error, 'Something went wrong during client connection change...')
+       })
+  }
+
+  changeOrderHigher() {
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        clientAddress: this.props.address,
+        order_type: "higher"
+      })
+    };
+
+    fetch(API + "change_client_order", requestOptions)
+      .then(
+        (response) => {
+          if(response.ok) {
+            console.log("success")
+            this.props.notify(NotifyType.success, 'Change active bluetooth host requested successfully')
+          } else {
+            throw Error("")
+          }
+       })
+      .catch((error) => {
+          console.log("error")
+          this.props.notify(NotifyType.error, 'Something went wrong during client connection change...')
+       })
+  }
+
   setAsActiveBtHost() {
     const requestOptions = {
       method: 'POST',
@@ -156,6 +215,40 @@ class BtClient extends React.Component {
       return
     }
   }
+
+  renderOrderLowerButton() {
+    if(this.props.order > 0) {
+      return (
+        <button className="btn btn-default text-white col-1 py-0 ps-0 pe-3" onClick={() => this.changeOrderLower()}> <i className="bi bi-chevron-left" style={{'fontsize': '0.9rem'}}></i> </button>
+      )
+    } else {
+      return (
+        <button className="btn btn-default text-white col-1 py-0 ps-0 pe-3 disabled" onClick={() => this.changeOrderLower()}> <i className="bi bi-chevron-left" style={{'fontsize': '0.9rem'}}></i> </button>
+      )
+    }
+  }
+
+  renderOrderHigherButton() {
+    if(this.props.order < this.props.lastClientOrderNumber) {
+      return (
+        <button className="btn btn-default text-white col-1 py-0 ps-0 pe-3" onClick={() => this.changeOrderHigher()}> <i className="bi bi-chevron-right" style={{'fontsize': '0.9rem'}}></i> </button>
+      )
+    } else {
+      return (
+        <button className="btn btn-default text-white col-1 py-0 ps-0 pe-3 disabled" onClick={() => this.changeOrderHigher()}> <i className="bi bi-chevron-right" style={{'fontsize': '0.9rem'}}></i> </button>
+      )
+    }
+  }
+  
+  renderOrderButtons() {
+    return (
+      <div className="row">
+        {this.renderOrderLowerButton()}
+        {this.renderOrderHigherButton()}
+      </div>
+    )
+  }
+
   renderConnectedCard() {
     var isHost = ""
     if(this.props.isHost) {
@@ -164,7 +257,16 @@ class BtClient extends React.Component {
     return (
       <div className="col-md-6 ">
         <div className="card mb-3 border-success">
-          <h5 className="card-header bg-success text-center text-white">{this.props.name}</h5>
+          <div className="card-header bg-success pb-0">
+            <div className="row">
+              <div className="text-center text-white col-2">
+                {this.renderOrderButtons()}
+              </div>
+              <h5 className="text-center text-white col-8">
+                {this.props.name}
+              </h5>
+            </div>
+          </div>
           <div className="card-body">
             <h6 className="card-title">Connected {isHost}</h6>
             <p className="card-text">{this.props.address}</p>
@@ -186,10 +288,15 @@ class BtClient extends React.Component {
         <div className="card mb-3 border-secondary">
           <div className="card-header bg-secondary pb-0">
             <div className="row">
-              <h5 className="text-center text-white col-11">
+              <div className="text-center text-white col-2">
+                {this.renderOrderButtons()}
+              </div>
+              <h5 className="text-center text-white col-8">
                 {this.props.name}
               </h5>
-              <ClientRemovalModalButton {...this.props} removeCB={() => this.removeClient()}/>
+              <div className="text-center text-white col-1 offset-1">
+                <ClientRemovalModalButton {...this.props} removeCB={() => this.removeClient()}/>
+              </div>
             </div>
           </div>
           <div className="card-body">

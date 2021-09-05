@@ -72,6 +72,11 @@ class KvmDbusService(ServiceInterface):
         return
 
     @dbus_next.service.method()
+    def ChangeClientOrder(self, client_address: 's', order_type: 's') -> '':
+        self._bt_server.change_client_order(client_address, order_type)
+        return
+
+    @dbus_next.service.method()
     def ReloadSettings(self) -> '':
         logging.info(f"D-Bus: Reload settings")
         self._hotkey_detector.reload_settings()

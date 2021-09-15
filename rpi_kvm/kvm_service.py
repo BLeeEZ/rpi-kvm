@@ -125,30 +125,37 @@ class KvmDbusService(ServiceInterface):
 
     @dbus_next.service.method()
     def SendMouseUsbTelegram(self, buttons: 'ab', x_pos: 'i', y_pos: 'i', v_wheel: 'i', h_wheel: 'i') -> '':
-        buttons_byte = UsbHidDecoder.convert_modifier_bit_mask_to_int(buttons)
-        # limit the values to fit inside 1 byte
-        x_pos_byte = UsbHidDecoder.enshure_byte_size(x_pos)
-        y_pos_byte = UsbHidDecoder.enshure_byte_size(y_pos)
-        v_wheel_byte = UsbHidDecoder.enshure_byte_size(v_wheel)
-        h_wheel_byte = UsbHidDecoder.enshure_byte_size(h_wheel)
-        # |- USB HID input report
-        # |     |- USB HID usage report => Mouse
-        # |     |     |- Bit mask for mouse buttons
-        # |     |     |  0x80: Not defined
-        # |     |     |  0x40: Not defined
-        # |     |     |  0x20: Not defined
-        # |     |     |  0x10: Not defined
-        # |     |     |  0x08: Forward mouse button
-        # |     |     |  0x04: Middle mouse button
-        # |     |     |  0x02: Right mouse button
-        # |     |     |  0x01: Left mouse button
-        # |     |     |     |- Mouse x position
-        # |     |     |     |     |- Mouse y position
-        # |     |     |     |     |     |- Vertical wheel position
-        # |     |     |     |     |     |     |- Horizontal wheel position
-        # 0xA1, 0x02, 0xXX, 0xXX, 0xXX, 0xXX, 0xXX]
-        mouse_usb_telegram = [0xA1, 2, buttons_byte, x_pos_byte, y_pos_byte, v_wheel_byte, h_wheel_byte]
-        self._bt_server.send(mouse_usb_telegram)
+        action = self._hotkey_detector.evaluate_new_mouse_input(buttons)
+        if action == HotkeyAktion.SwitchToNextHost:
+            self._bt_server.switch_to_next_connected_host()
+            client_names = self._bt_server.get_connected_client_names()
+            logging.info(f"D-Bus: {action.name}: {client_names[0]}")
+            self.signal_host_change(client_names)
+        else:
+            buttons_byte = UsbHidDecoder.convert_modifier_bit_mask_to_int(buttons)
+            # limit the values to fit inside 1 byte
+            x_pos_byte = UsbHidDecoder.enshure_byte_size(x_pos)
+            y_pos_byte = UsbHidDecoder.enshure_byte_size(y_pos)
+            v_wheel_byte = UsbHidDecoder.enshure_byte_size(v_wheel)
+            h_wheel_byte = UsbHidDecoder.enshure_byte_size(h_wheel)
+            # |- USB HID input report
+            # |     |- USB HID usage report => Mouse
+            # |     |     |- Bit mask for mouse buttons
+            # |     |     |  0x80: Not defined
+            # |     |     |  0x40: Not defined
+            # |     |     |  0x20: Not defined
+            # |     |     |  0x10: Forward mouse button
+            # |     |     |  0x08: Backward mouse button
+            # |     |     |  0x04: Middle mouse button
+            # |     |     |  0x02: Right mouse button
+            # |     |     |  0x01: Left mouse button
+            # |     |     |     |- Mouse x position
+            # |     |     |     |     |- Mouse y position
+            # |     |     |     |     |     |- Vertical wheel position
+            # |     |     |     |     |     |     |- Horizontal wheel position
+            # 0xA1, 0x02, 0xXX, 0xXX, 0xXX, 0xXX, 0xXX]
+            mouse_usb_telegram = [0xA1, 2, buttons_byte, x_pos_byte, y_pos_byte, v_wheel_byte, h_wheel_byte]
+            self._bt_server.send(mouse_usb_telegram)
 
     @dbus_next.service.signal()
     def signal_host_change(self, client_names: 'as') -> 'as':

@@ -53,6 +53,7 @@ class HotkeyDetector(object):
         self._config = hotKeyConfig
         self._hot_keys = self._config.keys
         self._key_strokes = RingBuffer(1)
+        self._mouse_buttons = [False, False, False, False, False, False, False, False]
         self.activation = None
 
     def reload_settings(self):
@@ -68,6 +69,14 @@ class HotkeyDetector(object):
                 self._key_strokes.reset()
                 break
         return self.activation
+
+    def evaluate_new_mouse_input(self, new_mouse_button_input):
+        last_mouse_buttons_buffer = self._mouse_buttons
+        self._mouse_buttons = new_mouse_button_input
+        if new_mouse_button_input[2] and not last_mouse_buttons_buffer[2]:
+            return HotkeyAktion.SwitchToNextHost
+        return None
+            
 
 if __name__ == "__main__":
     settings = Settings()

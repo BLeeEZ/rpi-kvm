@@ -14,12 +14,13 @@ class Mouse(object):
     def __init__(self, input_device):
         self._idev = input_device
         logging.info(f"{self._idev.path}: Init Mouse - {self._idev.name}")
+        self.__client_switch_button_index = 2
         self._buttons = [ # One byte size (bit map) to represent the mouse buttons
-            False, # Not defined
-            False, # Not defined
-            False, # Not defined
-            False, # Not defined
+            False, # USB not defined
+            False, # USB not defined
+            False, # USB not defined. Not send via bluetooth -> placeholder for client switch
             False, # Forward mouse button
+            False, # Backward mouse button
             False, # Middle mouse button
             False, # Right mouse button
             False] # Left mouse button
@@ -99,6 +100,11 @@ class Mouse(object):
                     logging.debug(f"Key event {ecodes.BTN[event.code]}: {event.value}")
                 else:
                     logging.debug(f"Key event {event.code}: {event.value}")
+            elif event.code == 125: # MX Master 3 - Gesture mouse button
+                logging.debug(f"Key event BTN_GESTURE: {event.value}")
+                self._have_buttons_changed = True
+                self._buttons[self.__client_switch_button_index] = (event.value == 1)
+
         elif event.type == ecodes.EV_REL:
             if event.code == 0:
                 self._x_pos += event.value

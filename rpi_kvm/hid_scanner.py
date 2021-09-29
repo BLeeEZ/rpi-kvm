@@ -23,6 +23,8 @@ class HidScanner(object):
 
     def scan(self):
         self._devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+        self._keyboards = []
+        self._mice = []
         for device in self._devices:
             # has device a right button -> it's a mouse
             if evdev.ecodes.BTN_RIGHT in device.capabilities().get(evdev.ecodes.EV_KEY, []):

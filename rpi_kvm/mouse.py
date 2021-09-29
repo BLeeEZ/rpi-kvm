@@ -12,6 +12,7 @@ from usb_hid_decoder import UsbHidDecoder
 
 class Mouse(object):
     def __init__(self, input_device):
+        self._is_alive = False
         self._idev = input_device
         logging.info(f"{self._idev.path}: Init Mouse - {self._idev.name}")
         self.__client_switch_button_index = 2
@@ -32,13 +33,30 @@ class Mouse(object):
         self._last_syn_event_time = 0
         self._update_rate = 20/1000
 
+    @property
+    def is_alive(self):
+        return self._is_alive
+
+    @property
+    def path(self):
+        return self._idev.path
+
+    @property
+    def name(self):
+        return self._idev.name
+
     async def run(self):
         logging.info(f"{self._idev.path}: D-Bus service connecting...")
         await self._connect_to_dbus_service()
+        self._is_alive = True
         logging.info(f"{self._idev.path}: Start sending mouse sync events continuously")
         asyncio.create_task(self._continuous_sync_event())
         logging.info(f"{self._idev.path}: Start listening to mouse event loop")
-        await self._event_loop()
+        try:
+            await self._event_loop()
+        except Exception as e:
+            logging.error(f"{self._idev.path}: {e}")
+        self._is_alive = False
 
     # poll for mouse events
     async def _event_loop(self):
@@ -47,7 +65,7 @@ class Mouse(object):
 
     # continuous mouse sync event to prevent input lag on host
     async def _continuous_sync_event(self):
-        while True:
+        while self._is_alive:
             time_ns = time.time_ns()
             time_s = int(time_ns / 1_000_000_000)
             time_ms = int((time_ns - (time_s * 1_000_000_000)) / 1_000)
@@ -97,11 +115,11 @@ class Mouse(object):
                 self._have_buttons_changed = True
                 self._buttons[button_index] = (event.value == 1)
                 if event.code in ecodes.BTN:
-                    logging.debug(f"Key event {ecodes.BTN[event.code]}: {event.value}")
+                    logging.debug(f"{self._idev.path}: Key event {ecodes.BTN[event.code]}: {event.value}")
                 else:
-                    logging.debug(f"Key event {event.code}: {event.value}")
+                    logging.debug(f"{self._idev.path}: Key event {event.code}: {event.value}")
             elif event.code == 125: # MX Master 3 - Gesture mouse button
-                logging.debug(f"Key event BTN_GESTURE: {event.value}")
+                logging.debug(f"{self._idev.path}: Key event BTN_GESTURE: {event.value}")
                 self._have_buttons_changed = True
                 self._buttons[self.__client_switch_button_index] = (event.value == 1)
 
@@ -111,26 +129,36 @@ class Mouse(object):
             elif event.code == 1:
                 self._y_pos += event.value
             elif event.code == 8:
-                logging.debug(f"V-Wheel movement: {event.value}")
+                logging.debug(f"{self._idev.path}: V-Wheel movement: {event.value}")
                 self._v_wheel += event.value
             elif event.code == 6:
-                logging.debug(f"H-Wheel movement: {event.value}")
+                logging.debug(f"{self._idev.path}: H-Wheel movement: {event.value}")
                 self._h_wheel -= event.value
 
 async def main():
     logging.basicConfig(format='Mouse %(levelname)s: %(message)s', level=logging.DEBUG)
     logging.info("Creating HID Manager")
     hid_manager = HidScanner()
-    hid_manager.scan()
+    mice = dict()
 
-    while len(hid_manager.mouse_devices) == 0:
-        logging.warning("No mouse found, waiting 3 seconds and retrying")
-        asyncio.sleep(3)
-    
-    for mouse_device in hid_manager.mouse_devices:
-        mouse = Mouse(mouse_device)
-        asyncio.create_task(mouse.run())
-    await asyncio.Future()
+    while True:
+        hid_manager.scan()
+
+        removed_mice = [mouse for mouse in mice.values() if not mouse.is_alive]
+        for mouse in removed_mice:
+            logging.info(f"Removing mouse: {mouse.path}")
+            del mice[mouse.path]
+
+        device_paths = [mouse_device.path for mouse_device in hid_manager.mouse_devices]
+        if len(device_paths) == 0:
+            logging.warning("No mouse found, waiting till next device scan")
+        else:
+            new_mice = [mouse_device for mouse_device in hid_manager.mouse_devices if mouse_device.path not in mice]
+            for mouse_device in new_mice:
+                mouse = Mouse(mouse_device)
+                mice[mouse_device.path] = mouse
+                asyncio.create_task(mouse.run())
+        await asyncio.sleep(5)
 
 if __name__ == "__main__":
     asyncio.run( main() )

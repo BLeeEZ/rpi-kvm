@@ -11,6 +11,7 @@ from usb_hid_decoder import UsbHidDecoder
 
 class Keyboard(object):
     def __init__(self, input_device):
+        self._is_alive = False
         self._idev = input_device
         logging.info(f"{self._idev.path}: Init Keyboard - {self._idev.name}")
         self._modifiers = [ # One byte size (bit map) to represent the pressed modifier keys
@@ -25,11 +26,28 @@ class Keyboard(object):
         # Place for 6 simultaneously pressed regular keys
         self._keys = [0, 0, 0, 0, 0, 0]
 
+    @property
+    def is_alive(self):
+        return self._is_alive
+
+    @property
+    def path(self):
+        return self._idev.path
+
+    @property
+    def name(self):
+        return self._idev.name
+
     async def run(self):
         logging.info(f"{self._idev.path}: D-Bus service connecting...")
         await self._connect_to_dbus_service()
         logging.info(f"{self._idev.path}: Starting event loop")
-        await self._event_loop()
+        self._is_alive = True
+        try:
+            await self._event_loop()
+        except Exception as e:
+            logging.error(f"{self._idev.path}: {e}")
+        self._is_alive = False
 
     # poll for keyboard events
     async def _event_loop(self):
@@ -87,16 +105,26 @@ async def main():
     logging.basicConfig(format='KB %(levelname)s: %(message)s', level=logging.DEBUG)
     logging.info("Creating HID Manager")
     hid_manager = HidScanner()
-    hid_manager.scan()
+    keyboards = dict()
 
-    while len(hid_manager.keyboard_devices) == 0:
-        logging.warning("No keyboard found, waiting 3 seconds and retrying")
-        asyncio.sleep(3)
-    
-    for keyboard_device in hid_manager.keyboard_devices:
-        kb = Keyboard(keyboard_device)
-        asyncio.create_task(kb.run())
-    await asyncio.Future()
+    while True:
+        hid_manager.scan()
+
+        removed_keyboards = [keyboard for keyboard in keyboards.values() if not keyboard.is_alive]
+        for keyboard in removed_keyboards:
+            logging.info(f"Removing keyboard: {keyboard.path}")
+            del keyboards[keyboard.path]
+
+        device_paths = [keyboard_device.path for keyboard_device in hid_manager.keyboard_devices]
+        if len(device_paths) == 0:
+            logging.warning("No keyboard found, waiting till next device scan")
+        else:
+            new_keyboards = [keyboard_device for keyboard_device in hid_manager.keyboard_devices if keyboard_device.path not in keyboards]
+            for keyboard_device in new_keyboards:
+                kb = Keyboard(keyboard_device)
+                keyboards[keyboard_device.path] = kb
+                asyncio.create_task(kb.run())
+        await asyncio.sleep(5)
 
 if __name__ == "__main__":
     asyncio.run( main() )

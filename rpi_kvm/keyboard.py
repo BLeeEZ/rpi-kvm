@@ -108,7 +108,7 @@ async def main():
     keyboards = dict()
 
     while True:
-        hid_manager.scan()
+        await hid_manager.scan()
 
         removed_keyboards = [keyboard for keyboard in keyboards.values() if not keyboard.is_alive]
         for keyboard in removed_keyboards:

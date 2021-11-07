@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import asyncio
 import evdev
 import logging
 
@@ -21,7 +22,11 @@ class HidScanner(object):
     def mouse_devices(self):
         return self._mice
 
-    def scan(self):
+    async def scan(self):
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, self._scan_for_devices_via_blocking_evdev)
+    
+    def _scan_for_devices_via_blocking_evdev(self):
         self._devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
         self._keyboards = []
         self._mice = []
@@ -46,12 +51,11 @@ class HidScanner(object):
         for device in self._mice:
             logging.info(f"{device.path} {device.name} {device.phys}")
 
-def main():
+async def main():
     logging.basicConfig(format='HID %(levelname)s: %(message)s', level=logging.DEBUG)
-    logging.info("Creating HID Manager")
     hid_manager = HidScanner()
-    hid_manager.scan()
+    await hid_manager.scan()
     hid_manager.info()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run( main() )

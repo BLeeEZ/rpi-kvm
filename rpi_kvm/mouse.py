@@ -163,7 +163,7 @@ async def main():
     await kvm_mouse.start()
 
     while True:
-        hid_manager.scan()
+        await hid_manager.scan()
 
         removed_event_mice = [event_mouse for event_mouse in kvm_mouse.event_mice.values() if not event_mouse.is_alive]
         for event_mouse in removed_event_mice:

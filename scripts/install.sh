@@ -10,6 +10,9 @@ echo "Install required python packages via pip3"
 sudo pip3 install evdev dbus-next aiohttp RPi.GPIO
 echo "Install required python packages via apt-get"
 sudo apt-get install python3-pyudev python3-evdev python3-dbus python3-numpy python3-gi -y
+echo "Install dev tools"
+curl -sSL https://deb.nodesource.com/setup_16.x | sudo bash -
+sudo apt install -y nodejs
 echo "--- Dependency Install Done ------"
 
 echo "--- RPI-KVM Configuration Step ---"

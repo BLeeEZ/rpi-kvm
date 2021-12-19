@@ -2,3 +2,23 @@ __pycache__/
 conf/bluetooth.service.bak
 conf/rpi-kvm-settings.json
 conf/rpi-kvm-client-order.json
+
+
+# dependencies
+web/node_modules
+web/.pnp
+.pnp.js
+
+# testing
+web/coverage
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

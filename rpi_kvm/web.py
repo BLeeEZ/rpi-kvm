@@ -42,7 +42,7 @@ class WebServer(object):
         self._app.add_routes([web.post('/clipboard-clear-history', self._clipboard.clear_history)])
         self._app.add_routes([web.post('/clipboard-apply-entry', self._clipboard.apply_entry)])
         self._app.add_routes([web.post('/clipboard-clear-entry', self._clipboard.clear_entry)])
-        self._app.router.add_static('/', "web/")
+        self._app.router.add_static('/', "web/build/")
 
     async def _connect_to_dbus_service(self):
         self._kvm_dbus_iface = None

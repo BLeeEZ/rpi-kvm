@@ -1,0 +1,8 @@
+{
+  "short_name": "RPI-K(V)M",
+  "name": "Raspberry Pi - Keyboard (Video) Mouse",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

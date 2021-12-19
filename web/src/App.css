@@ -1,0 +1,7 @@
+@import '~bootstrap/dist/css/bootstrap.css';
+@import '~bootstrap-icons/font/bootstrap-icons.css';
+
+body {
+  color: black;
+  background-color: white;
+}

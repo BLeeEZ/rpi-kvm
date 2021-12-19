@@ -71,7 +71,7 @@ Follow [this](/docu/lcd.md) wiring guide to display the bluetooth clients on a L
 
 ### Web
 
+- [Typescript](https://www.typescriptlang.org): JavaScript with syntax for types.
+- [React Js](https://reactjs.org/): A JavaScript library for building user interfaces
 - [Bootstrap](https://getbootstrap.com/): Responsive mobile-first web sites
 - [Bootstrap Icons](https://icons.getbootstrap.com/?#icons): Beatiful web icons and used for doc/overview pictures
-- [React Js](https://reactjs.org/): A JavaScript library for building user interfaces
-- [Babel.js](https://babeljs.io/): In-browser Babel transformer for jsx to js: 

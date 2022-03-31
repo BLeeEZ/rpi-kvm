@@ -5,7 +5,7 @@ echo "--- RPI-KVM Dependency Install ---"
 echo "Install required basic packages via apt-get"
 sudo apt-get install git tmux python python3 python-dev python3-dev python3-pip -y
 echo "Install required bluetooth packages via apt-get"
-sudo apt-get install bluez bluez-tools bluez-firmware python-bluez -y
+sudo apt-get install bluez bluez-tools bluez-firmware python3-bluez -y
 echo "Install required python packages via pip3"
 sudo pip3 install evdev dbus-next aiohttp RPi.GPIO
 echo "Install required python packages via apt-get"

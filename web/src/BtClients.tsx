@@ -9,9 +9,7 @@ type BtClientsState = {
 export default class BtClients extends React.Component<any, BtClientsState> {
   static MAX_TIMEOUT_CHECK_SERVER_CON = 10000;
 
-  address = 'zimba-kvm';
-
-  port = 8080;
+  address = '';
 
   ws?: WebSocket;
 
@@ -29,6 +27,7 @@ export default class BtClients extends React.Component<any, BtClientsState> {
   }
 
   componentDidMount() {
+    this.address = window.location.host
     this.connect();
   }
 
@@ -37,7 +36,7 @@ export default class BtClients extends React.Component<any, BtClientsState> {
   }
 
   connect = () => {
-    const webSocketAddress = `ws://${this.address}:${this.port}/bt-clients-socket`;
+    const webSocketAddress = `ws://${this.address}/bt-clients-socket`;
     // eslint-disable-next-line no-console
     console.log(`BT-Client-BE: connect to: ${webSocketAddress}`);
     this.ws = new WebSocket(webSocketAddress);

@@ -221,7 +221,10 @@ class BtServer(object):
         for client_address, client in self._clients.items():
             info_dict = client.info
             info_dict["order"] = self._clients_order.clients[client.address]
-            info_dict["isHost"] = (self._active_host.address == client.address)
+            if self._active_host:
+                info_dict["isHost"] = (self._active_host.address == client.address)
+            else:
+                info_dict["isHost"] = False
             infos.append(info_dict)
         return {"clients": infos}
 

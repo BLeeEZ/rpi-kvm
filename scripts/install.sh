@@ -1,5 +1,10 @@
 #! /bin/bash
 
+function fail {
+	printf '%s\n' "$1" >&2 ## Send a message to stderr
+	exit "${2-1}" 
+}
+
 echo "### RPI-KVM Install ##############"
 echo "--- RPI-KVM Dependency Install ---"
 echo "Install required basic packages via apt-get"
@@ -18,8 +23,21 @@ echo "--- Dependency Install Done ------"
 echo "--- RPI-KVM Configuration Step ---"
 echo "Copy RPI-KVM D-Bus config"
 sudo cp ./conf/org.rpi.kvmservice.conf /etc/dbus-1/system.d/
-echo "Create backup of the current bluetooth service config"
-sudo cp /lib/systemd/system/bluetooth.service ./conf/bluetooth.service.bak
+
+if [ ! -f "./conf/bluetooth.service.bak" ]; then
+	echo "Create backup of the current bluetooth service config"
+	sudo cp /lib/systemd/system/bluetooth.service ./conf/bluetooth.service.bak
+fi
+
+if [ -f "/usr/lib/bluetooth/bluetoothd" ]; then
+	bluetoothd_path="/usr/lib/bluetooth/bluetoothd"
+elif [ -f "/usr/libexec/bluetooth/bluetoothd" ]; then
+	bluetoothd_path="/usr/libexec/bluetooth/bluetoothd"
+else
+	fail "The bluetooth daemon path \"bluetoothd\" could't be found!"
+fi
+echo "The bluetooth daemon path for \"bluetoothd\" is: ${bluetoothd_path}"
+
 echo "Copy RPI-KVM bluetooth service config"
 # The RPI-KVM bluetooth service config deactivates the 'input' plugin.
 # For RPI-KVM to accept connections it is neccessary to disable the Bluez 'input' plugin by 
@@ -31,6 +49,9 @@ echo "Copy RPI-KVM bluetooth service config"
 # Remark: Other bluetooth input devices can't be connected,
 # if the 'input' plugin is disabled.
 sudo cp ./conf/bluetooth.service /lib/systemd/system/bluetooth.service
+# Replace the placeholder for the bluetooth daemon path with the correct path
+sudo sed -i "s|BLUETOOTH_DAEMON_PATH|${bluetoothd_path}|" /lib/systemd/system/bluetooth.service
+
 echo "Copy RPI-KVM service config"
 sudo cp ./conf/rpi-kvm.service /lib/systemd/system/rpi-kvm.service
 sudo systemctl daemon-reload

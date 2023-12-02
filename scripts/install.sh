@@ -82,10 +82,10 @@ sudo cp ./conf/bluetooth.service /lib/systemd/system/bluetooth.service
 # Replace the placeholder for the bluetooth daemon path with the correct path
 sudo sed -i "s|BLUETOOTH_DAEMON_PATH|${bluetoothd_path}|" /lib/systemd/system/bluetooth.service
 
-echo "Replace legacy pi user with current user"
-sed -i'' -e "s|/pi/|/${SUDO_USER}/|g" ./conf/rpi-kvm.service
 echo "Copy RPI-KVM service config"
 sudo cp ./conf/rpi-kvm.service /lib/systemd/system/rpi-kvm.service
+echo "Replace legacy pi user with current user if necessary"
+sudo sed -i'' -e "s|/pi/|/${SUDO_USER}/|g" /lib/systemd/system/rpi-kvm.service
 sudo systemctl daemon-reload
 echo "Restart bluetooth service with the new config"
 sudo systemctl restart bluetooth

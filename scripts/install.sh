@@ -8,7 +8,8 @@ function fail {
 echo "### RPI-KVM Install ##############"
 echo "--- RPI-KVM Dependency Install ---"
 echo "Install required basic packages via apt-get"
-sudo apt-get install git tmux python python3 python-dev python3-dev python3-pip -y
+sudo apt update
+sudo apt-get install git tmux python-is-python3 python3 python3-dev python3-pip -y
 echo "Install required bluetooth packages via apt-get"
 sudo apt-get install bluez bluez-tools bluez-firmware python3-bluez -y
 echo "Install required python packages via pip3"
@@ -16,8 +17,17 @@ sudo pip3 install evdev dbus-next aiohttp RPi.GPIO
 echo "Install required python packages via apt-get"
 sudo apt-get install python3-pyudev python3-evdev python3-dbus python3-numpy python3-gi -y
 echo "Install dev tools"
-curl -sSL https://deb.nodesource.com/setup_16.x | sudo bash -
-sudo apt install -y nodejs
+### This method of installing is deprecated according to the warning messages that show up
+##curl -sSL https://deb.nodesource.com/setup_16.x | sudo bash -
+##sudo apt install -y nodejs
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+NODE_MAJOR=16
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+sudo apt-get update
+sudo apt-get install nodejs -y
 echo "--- Dependency Install Done ------"
 
 echo "--- RPI-KVM Configuration Step ---"
@@ -52,6 +62,8 @@ sudo cp ./conf/bluetooth.service /lib/systemd/system/bluetooth.service
 # Replace the placeholder for the bluetooth daemon path with the correct path
 sudo sed -i "s|BLUETOOTH_DAEMON_PATH|${bluetoothd_path}|" /lib/systemd/system/bluetooth.service
 
+echo "Replace legacy pi user with current user"
+sed -i'' -e "s%/pi/%/$USER/%g"./conf/rpi-kvm.service
 echo "Copy RPI-KVM service config"
 sudo cp ./conf/rpi-kvm.service /lib/systemd/system/rpi-kvm.service
 sudo systemctl daemon-reload

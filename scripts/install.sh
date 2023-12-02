@@ -12,10 +12,28 @@ sudo apt update
 sudo apt-get install git tmux python-is-python3 python3 python3-dev python3-pip -y
 echo "Install required bluetooth packages via apt-get"
 sudo apt-get install bluez bluez-tools bluez-firmware python3-bluez -y
-echo "Install required python packages via pip3"
-sudo pip3 install evdev dbus-next aiohttp RPi.GPIO
+### This is naughty according to Python, better to install the packages via python3-* to be managed by the system, otherwise need a virtualenv
+#Install required python packages via pip3
+# error: externally-managed-environment
+
+# × This environment is externally managed
+# ╰─> To install Python packages system-wide, try apt install
+#     python3-xyz, where xyz is the package you are trying to
+#     install.
+    
+#     If you wish to install a non-Debian-packaged Python package,
+#     create a virtual environment using python3 -m venv path/to/venv.
+#     Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+#     sure you have python3-full installed.
+    
+#     For more information visit http://rptl.io/venv
+
+# note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+# hint: See PEP 668 for the detailed specification.
+#echo "Install required python packages via pip3"
+#sudo pip3 install evdev dbus-next aiohttp RPi.GPIO
 echo "Install required python packages via apt-get"
-sudo apt-get install python3-pyudev python3-evdev python3-dbus python3-numpy python3-gi -y
+sudo apt-get install python3-pyudev python3-evdev python3-dbus python3-dbus-next python3-aiohttp python3-rpi.gpio python3-numpy python3-gi -y
 echo "Install dev tools"
 ### This method of installing is deprecated according to the warning messages that show up
 ##curl -sSL https://deb.nodesource.com/setup_16.x | sudo bash -
@@ -23,7 +41,9 @@ echo "Install dev tools"
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg
 sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+# --yes allows overwriting if re-running the script (to repair a broken install or get new fixes)
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/nodesource.gpg
+# This can be changed to a newer supported version once tested
 NODE_MAJOR=16
 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 sudo apt-get update
@@ -63,7 +83,7 @@ sudo cp ./conf/bluetooth.service /lib/systemd/system/bluetooth.service
 sudo sed -i "s|BLUETOOTH_DAEMON_PATH|${bluetoothd_path}|" /lib/systemd/system/bluetooth.service
 
 echo "Replace legacy pi user with current user"
-sed -i'' -e "s%/pi/%/$USER/%g"./conf/rpi-kvm.service
+sed -i'' -e "s|/pi/|/${SUDO_USER}/|g" ./conf/rpi-kvm.service
 echo "Copy RPI-KVM service config"
 sudo cp ./conf/rpi-kvm.service /lib/systemd/system/rpi-kvm.service
 sudo systemctl daemon-reload

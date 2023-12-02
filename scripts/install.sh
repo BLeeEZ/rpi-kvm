@@ -12,32 +12,9 @@ sudo apt update
 sudo apt-get install git tmux python-is-python3 python3 python3-dev python3-pip -y
 echo "Install required bluetooth packages via apt-get"
 sudo apt-get install bluez bluez-tools bluez-firmware python3-bluez -y
-### This is naughty according to Python, better to install the packages via python3-* to be managed by the system, otherwise need a virtualenv
-#Install required python packages via pip3
-# error: externally-managed-environment
-
-# × This environment is externally managed
-# ╰─> To install Python packages system-wide, try apt install
-#     python3-xyz, where xyz is the package you are trying to
-#     install.
-    
-#     If you wish to install a non-Debian-packaged Python package,
-#     create a virtual environment using python3 -m venv path/to/venv.
-#     Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
-#     sure you have python3-full installed.
-    
-#     For more information visit http://rptl.io/venv
-
-# note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
-# hint: See PEP 668 for the detailed specification.
-#echo "Install required python packages via pip3"
-#sudo pip3 install evdev dbus-next aiohttp RPi.GPIO
 echo "Install required python packages via apt-get"
 sudo apt-get install python3-pyudev python3-evdev python3-dbus python3-dbus-next python3-aiohttp python3-rpi.gpio python3-numpy python3-gi -y
-echo "Install dev tools"
-### This method of installing is deprecated according to the warning messages that show up
-##curl -sSL https://deb.nodesource.com/setup_16.x | sudo bash -
-##sudo apt install -y nodejs
+echo "Install nodejs"
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg
 sudo mkdir -p /etc/apt/keyrings
